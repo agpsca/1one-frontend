@@ -2,7 +2,7 @@
 
 Rebranding do 360
 
-> 1one agora é "360". 
+> 360 agora é 1one. 
 > O rebrand para 1one está em andamento!
 
 ## Stack
