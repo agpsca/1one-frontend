@@ -1,0 +1,32 @@
+"use client";
+
+import { MoonIcon, SunIcon } from "lucide-react";
+import { useTheme } from "next-themes";
+
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+export function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+        >
+          <SunIcon className="hidden dark:block" />
+          <MoonIcon className="dark:hidden" />
+          <span className="sr-only">Alternar tema</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">Alternar tema</TooltipContent>
+    </Tooltip>
+  );
+}

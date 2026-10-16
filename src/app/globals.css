@@ -1,0 +1,246 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------
+   Primitives — valores crus. Nunca usar direto em componentes de
+   produto, apenas como fonte dos tokens semânticos abaixo.
+   --------------------------------------------------------------- */
+@theme {
+  --color-brand-brown: #5c4033;
+  --color-brand-dark-green: #152e2b;
+  --color-brand-green: #00664e;
+  --color-brand-spring-green: #05dc7f;
+
+  --color-feedback-amber-500: #fbbf24;
+  --color-feedback-amber-dark: #2b220f;
+  --color-feedback-blue-500: #60a5fa;
+  --color-feedback-blue-dark: #1a232a;
+  --color-feedback-red-500: #f87171;
+  --color-feedback-red-dark: #2a1818;
+
+  --color-neutral-black: #000000;
+  --color-neutral-gray: #202020;
+  --color-neutral-white: #dbe3e6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-surface: var(--destructive-surface);
+  --color-info: var(--info);
+  --color-info-surface: var(--info-surface);
+  --color-success: var(--success);
+  --color-success-surface: var(--success-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ---------------------------------------------------------------
+   Semantics — dois temas. Cada token aponta para um primitive;
+   mudar a marca = mudar o primitive, não o componente.
+
+   `:root` = tema claro (padrão). `.dark` = tema escuro.
+   Os primitives são os mesmos nos dois: só os `*-500` foram
+   calibrados para fundo escuro, então no tema claro eles são
+   escurecidos (texto) e diluídos (superfície) via `color-mix`.
+   --------------------------------------------------------------- */
+:root {
+  --radius: 0.625rem;
+
+  --background: var(--color-neutral-white);
+  --foreground: var(--color-neutral-gray);
+
+  --card: color-mix(in oklch, var(--color-neutral-white) 35%, #fff);
+  --card-foreground: var(--color-neutral-gray);
+
+  --popover: color-mix(in oklch, var(--color-neutral-white) 25%, #fff);
+  --popover-foreground: var(--color-neutral-gray);
+
+  /* primary: CTA único por tela. spring-green não tem contraste
+     sobre fundo claro (1.8:1), então aqui o CTA é brand/green. */
+  --primary: var(--color-brand-green);
+  --primary-foreground: var(--color-neutral-white);
+
+  --secondary: color-mix(in oklch, var(--color-neutral-white) 70%, #fff);
+  --secondary-foreground: var(--color-neutral-gray);
+
+  --muted: color-mix(in oklch, var(--color-neutral-white) 60%, #fff);
+  --muted-foreground: color-mix(
+    in oklch,
+    var(--color-neutral-gray) 70%,
+    var(--color-neutral-white)
+  );
+
+  --accent: color-mix(in oklch, var(--color-brand-green) 12%, #fff);
+  --accent-foreground: var(--color-brand-dark-green);
+
+  /* pares surface + text/icon dos estados de feedback */
+  --destructive: color-mix(
+    in oklch,
+    var(--color-feedback-red-500) 65%,
+    var(--color-neutral-black)
+  );
+  --destructive-surface: color-mix(
+    in oklch,
+    var(--color-feedback-red-500) 18%,
+    #fff
+  );
+  --info: color-mix(
+    in oklch,
+    var(--color-feedback-blue-500) 65%,
+    var(--color-neutral-black)
+  );
+  --info-surface: color-mix(in oklch, var(--color-feedback-blue-500) 18%, #fff);
+  --success: var(--color-brand-green);
+  --success-surface: color-mix(
+    in oklch,
+    var(--color-brand-spring-green) 18%,
+    #fff
+  );
+  --warning: color-mix(
+    in oklch,
+    var(--color-feedback-amber-500) 60%,
+    var(--color-neutral-black)
+  );
+  --warning-surface: color-mix(
+    in oklch,
+    var(--color-feedback-amber-500) 22%,
+    #fff
+  );
+
+  --border: color-mix(in oklch, var(--color-neutral-gray) 15%, transparent);
+  --input: color-mix(in oklch, var(--color-neutral-gray) 22%, transparent);
+  --ring: var(--color-brand-green);
+
+  --chart-1: var(--color-brand-green);
+  --chart-2: var(--color-brand-spring-green);
+  --chart-3: var(--color-feedback-blue-500);
+  --chart-4: var(--color-feedback-amber-500);
+  --chart-5: var(--color-brand-brown);
+
+  --sidebar: color-mix(in oklch, var(--color-neutral-white) 35%, #fff);
+  --sidebar-foreground: var(--color-neutral-gray);
+  --sidebar-primary: var(--color-brand-green);
+  --sidebar-primary-foreground: var(--color-neutral-white);
+  --sidebar-accent: color-mix(in oklch, var(--color-brand-green) 12%, #fff);
+  --sidebar-accent-foreground: var(--color-brand-dark-green);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+.dark {
+  --background: var(--color-neutral-black);
+  --foreground: var(--color-neutral-white);
+
+  --card: var(--color-neutral-gray);
+  --card-foreground: var(--color-neutral-white);
+
+  /* superfície de modal/popover = brand/dark-green */
+  --popover: var(--color-brand-dark-green);
+  --popover-foreground: var(--color-neutral-white);
+
+  /* primary: CTA único por tela */
+  --primary: var(--color-brand-spring-green);
+  --primary-foreground: var(--color-brand-dark-green);
+
+  --secondary: var(--color-neutral-gray);
+  --secondary-foreground: var(--color-neutral-white);
+
+  --muted: var(--color-neutral-gray);
+  /* 72%, não 62%: abaixo disso o hex de 12px no card fica em 3.55:1 */
+  --muted-foreground: color-mix(
+    in oklch,
+    var(--color-neutral-white) 72%,
+    var(--color-neutral-black)
+  );
+
+  --accent: color-mix(
+    in oklch,
+    var(--color-brand-dark-green) 85%,
+    var(--color-neutral-white)
+  );
+  --accent-foreground: var(--color-neutral-white);
+
+  /* pares surface + text/icon dos estados de feedback */
+  --destructive: var(--color-feedback-red-500);
+  --destructive-surface: var(--color-feedback-red-dark);
+  --info: var(--color-feedback-blue-500);
+  --info-surface: var(--color-feedback-blue-dark);
+  --success: var(--color-brand-spring-green);
+  --success-surface: var(--color-brand-dark-green);
+  --warning: var(--color-feedback-amber-500);
+  --warning-surface: var(--color-feedback-amber-dark);
+
+  --border: color-mix(in oklch, var(--color-neutral-white) 12%, transparent);
+  --input: color-mix(in oklch, var(--color-neutral-white) 16%, transparent);
+  --ring: var(--color-brand-spring-green);
+
+  --chart-1: var(--color-brand-spring-green);
+  --chart-2: var(--color-brand-green);
+  --chart-3: var(--color-feedback-blue-500);
+  --chart-4: var(--color-feedback-amber-500);
+  --chart-5: var(--color-brand-brown);
+
+  --sidebar: var(--color-neutral-gray);
+  --sidebar-foreground: var(--color-neutral-white);
+  --sidebar-primary: var(--color-brand-spring-green);
+  --sidebar-primary-foreground: var(--color-brand-dark-green);
+  --sidebar-accent: var(--color-brand-dark-green);
+  --sidebar-accent-foreground: var(--color-neutral-white);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

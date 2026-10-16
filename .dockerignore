@@ -1,0 +1,35 @@
+# Principio: o contexto carrega apenas o que `next build` le.
+# Ao adicionar um passo de build que dependa de outro arquivo (ex.: um
+# `prebuild` chamando check-tokens ou biome), remova a exclusao correspondente.
+
+# Artefatos e dependencias (reinstaladas/regeradas dentro da imagem)
+node_modules
+.next
+out
+build
+*.tsbuildinfo
+
+# Segredos e ambiente local. O build recebe NEXT_PUBLIC_* via --build-arg;
+# nenhum arquivo .env deve entrar na imagem (o Next leria .env.local no build).
+.env*
+
+# Git e metadados
+.git
+.gitignore
+
+# Docker (evita invalidar cache ao editar o proprio Dockerfile)
+Dockerfile
+.dockerignore
+
+# Ferramental de desenvolvimento: nada disso e lido por `next build`
+.husky
+.github
+.kiro
+.vscode
+scripts
+biome.json
+components.json
+orval.config.ts
+openapi
+*.md
+*.log
