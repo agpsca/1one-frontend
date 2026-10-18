@@ -39,6 +39,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # pnpm 11 tem um bug (pnpm/pnpm#12469) que reescreve o allowBuilds em
+      # pnpm-workspace.yaml trocando `true` por um placeholder, o que faz o
+      # esbuild nao ser buildado e o install falhar silenciosamente. Este guard
+      # falha o CI de forma clara se isso acontecer, em vez de deixar passar.
+      - name: Verify build-scripts config was honored
+        run: |
+          if grep -q "set this to true or false" pnpm-workspace.yaml; then
+            echo "::error file=pnpm-workspace.yaml::pnpm reescreveu allowBuilds com um placeholder. Restaure 'esbuild: true' e commite o arquivo."
+            exit 1
+          fi
+          if [ ! -x node_modules/.pnpm/esbuild@*/node_modules/esbuild/bin/esbuild ]; then
+            echo "::error::O binario do esbuild nao foi construido. Verifique allowBuilds em pnpm-workspace.yaml."
+            exit 1
+          fi
+
       - name: Check formatting and linting
         run: pnpm check
 
