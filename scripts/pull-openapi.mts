@@ -6,12 +6,12 @@ const url = process.env.OPENAPI_URL ?? "http://localhost:8000/openapi.json";
 
 // fetch() rejeita (em vez de retornar !ok) quando nao ha ninguem escutando;
 // sem o catch isso vira stack trace do Node em vez de instrucao acionavel.
-let res;
+let res: Response;
 try {
   res = await fetch(url);
 } catch (cause) {
   console.error(`Nao foi possivel conectar em ${url}`);
-  console.error(`  ${cause.message}`);
+  console.error(`  ${cause instanceof Error ? cause.message : String(cause)}`);
   console.error(
     "O backend esta rodando? Defina OPENAPI_URL se a URL for outra.",
   );

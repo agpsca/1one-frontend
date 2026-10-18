@@ -8,22 +8,24 @@
     "start": "next start",
     "check": "biome check .",
     "check:fix": "biome check . --write",
+    "check:ci": "biome check . --error-on-warnings",
     "typecheck": "next typegen && tsc --noEmit",
-    "check:tokens": "node scripts/check-tokens.mjs",
+    "check:tokens": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-tokens.mts",
     "check:modal": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-modal-store.mts",
     "check:nav": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-nav.mts",
     "check:proxy": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-proxy.mts",
-    "api:pull": "node scripts/pull-openapi.mjs",
+    "verify": "pnpm check:ci && pnpm typecheck && pnpm check:tokens && pnpm check:modal && pnpm check:nav && pnpm check:proxy",
+    "api:pull": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/pull-openapi.mts",
     "api:gen": "orval",
     "api:sync": "pnpm api:pull && pnpm api:gen",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,ts,tsx,json,css}": [
-      "biome check --write"
+      "biome check --error-on-warnings --no-errors-on-unmatched"
     ],
     "{src/app/globals.css,src/lib/tokens.ts}": [
-      "node scripts/check-tokens.mjs"
+      "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-tokens.mts"
     ],
     "src/stores/modal-store.ts": [
       "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-modal-store.mts"

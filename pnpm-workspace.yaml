@@ -1,3 +1,5 @@
+allowBuilds:
+  esbuild: true
 minimumReleaseAgeExclude:
   - '@orval/angular@8.43.0'
   - '@orval/axios@8.43.0'

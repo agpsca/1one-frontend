@@ -1,12 +1,3 @@
-/**
- * Espelho em dados do que está declarado em `src/app/globals.css`.
- * Serve só para renderizar a documentação — os componentes consomem
- * as classes Tailwind, nunca estes valores.
- *
- * `scripts/check-tokens.mjs` falha se este arquivo sair de sincronia
- * com o CSS.
- */
-
 export type Primitive = { name: string; hex: string };
 
 export const primitives: Record<"brand" | "feedback" | "neutral", Primitive[]> =

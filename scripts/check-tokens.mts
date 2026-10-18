@@ -1,5 +1,5 @@
 // Garante que a documentação (src/lib/tokens.ts) não saia de sincronia com
-// os tokens reais (src/app/globals.css). Rodar: node scripts/check-tokens.mjs
+// os tokens reais (src/app/globals.css). Rodar: pnpm check:tokens
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
@@ -9,7 +9,7 @@ const [css, tokens] = await Promise.all([
 ]);
 
 // 1. todo primitive declarado no CSS aparece na doc, com o mesmo hex
-const declared = [
+const declared: { name: string; hex: string }[] = [
   ...css.matchAll(/--color-([\w-]+):\s*(#[0-9a-fA-F]{6});/g),
 ].map(([, name, hex]) => ({ name, hex: hex.toUpperCase() }));
 assert.ok(declared.length > 0, "nenhum primitive encontrado em globals.css");
