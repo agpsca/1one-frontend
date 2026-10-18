@@ -1,1 +1,42 @@
-pnpm lint-staged
+# Verificação estrita dos arquivos staged (não corrige nada).
+if pnpm lint-staged; then
+  exit 0
+fi
+
+# Houve reprovação. Pergunta ao usuário se deseja corrigir automaticamente.
+# Hooks do git ocupam o stdin, então lemos a resposta direto do terminal (/dev/tty).
+if [ ! -t 0 ] && [ ! -e /dev/tty ]; then
+  echo ""
+  echo "✖ Há alterações reprovadas e não há terminal interativo para perguntar."
+  echo "  Rode 'pnpm check:fix' e tente novamente."
+  exit 1
+fi
+
+echo ""
+printf "✖ Há alterações reprovadas. Deseja corrigir automaticamente? [s/N] " > /dev/tty
+read -r resposta < /dev/tty
+
+case "$resposta" in
+  s|S|sim|Sim|SIM|y|Y|yes|Yes)
+    echo "→ Corrigindo..." > /dev/tty
+    # Corrige apenas os arquivos staged (escopo do commit), depois re-adiciona ao stage.
+    files=$(git diff --cached --name-only --diff-filter=ACMR -- '*.js' '*.jsx' '*.mjs' '*.ts' '*.tsx' '*.json' '*.css')
+    if [ -n "$files" ]; then
+      echo "$files" | xargs pnpm exec biome check --write --no-errors-on-unmatched
+      echo "$files" | xargs git add
+    fi
+
+    # Revalida. Se ainda houver erro (não auto-corrigível), aborta.
+    if pnpm lint-staged; then
+      echo "✔ Corrigido. Seguindo com o commit." > /dev/tty
+      exit 0
+    fi
+    echo "" > /dev/tty
+    echo "✖ Ainda há problemas que não podem ser corrigidos automaticamente. Commit abortado." > /dev/tty
+    exit 1
+    ;;
+  *)
+    echo "✖ Commit abortado. Nada foi alterado." > /dev/tty
+    exit 1
+    ;;
+esac
