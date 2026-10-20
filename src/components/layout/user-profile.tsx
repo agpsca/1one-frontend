@@ -10,7 +10,6 @@ import {
   UserPenIcon,
 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -92,7 +91,6 @@ function AccountDetails({ account }: { account: Account | null }) {
 export function UserProfile({ account }: { account: Account | null }) {
   const { isMobile } = useSidebar();
   const openModal = useModalStore((store) => store.open);
-  const router = useRouter();
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -106,8 +104,7 @@ export function UserProfile({ account }: { account: Account | null }) {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
-      router.replace("/login");
-      router.refresh();
+      window.location.replace("/login");
     }
   };
 

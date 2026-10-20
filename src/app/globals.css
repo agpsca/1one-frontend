@@ -14,6 +14,11 @@
   --color-brand-green: #00664e;
   --color-brand-spring-green: #05dc7f;
 
+  /* as duas cores da marca corporativa: a escura é pra fundo claro, a amarela
+     pra fundo escuro. Não têm par semântico — marca não é estado. */
+  --color-corporate-dark: #1c1c1c;
+  --color-corporate-yellow: #f9c930;
+
   --color-feedback-amber-500: #fbbf24;
   --color-feedback-amber-dark: #2b220f;
   --color-feedback-blue-500: #60a5fa;

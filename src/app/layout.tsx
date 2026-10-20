@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="pt-BR"
       suppressHydrationWarning
       className={cn(
         "h-full",
@@ -37,14 +37,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
-        {/* TEMPORÁRIO — script de captura do MCP do Figma (generate_figma_design).
-            Gated em dev para nunca chegar a produção. Remover depois de capturar. */}
-        {process.env.NODE_ENV !== "production" && (
-          <script
-            async
-            src="https://mcp.figma.com/mcp/html-to-design/capture.js"
-          />
-        )}
       </body>
     </html>
   );

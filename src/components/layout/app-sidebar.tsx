@@ -83,7 +83,7 @@ export function AppSidebar({ account }: { account: Account | null }) {
           <BrandMark />
           {!isCollapsed && (
             <span className="font-heading font-medium text-foreground">
-              1on
+              1one
             </span>
           )}
         </Link>

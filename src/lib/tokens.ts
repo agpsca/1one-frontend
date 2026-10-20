@@ -1,27 +1,33 @@
 export type Primitive = { name: string; hex: string };
 
-export const primitives: Record<"brand" | "feedback" | "neutral", Primitive[]> =
-  {
-    brand: [
-      { name: "brown", hex: "#5C4033" },
-      { name: "dark-green", hex: "#152E2B" },
-      { name: "green", hex: "#00664E" },
-      { name: "spring-green", hex: "#05DC7F" },
-    ],
-    feedback: [
-      { name: "amber-500", hex: "#FBBF24" },
-      { name: "amber-dark", hex: "#2B220F" },
-      { name: "blue-500", hex: "#60A5FA" },
-      { name: "blue-dark", hex: "#1A232A" },
-      { name: "red-500", hex: "#F87171" },
-      { name: "red-dark", hex: "#2A1818" },
-    ],
-    neutral: [
-      { name: "black", hex: "#000000" },
-      { name: "gray", hex: "#202020" },
-      { name: "white", hex: "#DBE3E6" },
-    ],
-  };
+export const primitives: Record<
+  "brand" | "corporate" | "feedback" | "neutral",
+  Primitive[]
+> = {
+  brand: [
+    { name: "brown", hex: "#5C4033" },
+    { name: "dark-green", hex: "#152E2B" },
+    { name: "green", hex: "#00664E" },
+    { name: "spring-green", hex: "#05DC7F" },
+  ],
+  corporate: [
+    { name: "dark", hex: "#1C1C1C" },
+    { name: "yellow", hex: "#F9C930" },
+  ],
+  feedback: [
+    { name: "amber-500", hex: "#FBBF24" },
+    { name: "amber-dark", hex: "#2B220F" },
+    { name: "blue-500", hex: "#60A5FA" },
+    { name: "blue-dark", hex: "#1A232A" },
+    { name: "red-500", hex: "#F87171" },
+    { name: "red-dark", hex: "#2A1818" },
+  ],
+  neutral: [
+    { name: "black", hex: "#000000" },
+    { name: "gray", hex: "#202020" },
+    { name: "white", hex: "#DBE3E6" },
+  ],
+};
 
 export type SemanticVariant =
   | "destructive"
