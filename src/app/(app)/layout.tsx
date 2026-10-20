@@ -23,7 +23,7 @@ export default async function AppLayout({
       <div className="relative flex h-dvh w-full overflow-hidden">
         <AppSidebar account={account} />
 
-        <SidebarInset className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <SidebarInset className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background/40">
           <header className="relative flex h-14 shrink-0 items-center border-b border-border px-4 md:hidden">
             <SidebarTrigger aria-label="Abrir navegação" />
             <span className="absolute left-1/2 -translate-x-1/2 font-heading font-medium">

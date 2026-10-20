@@ -3,6 +3,7 @@
 import { CodeXmlIcon } from "lucide-react";
 import Link from "next/link";
 
+import { CorporateLogo } from "@/components/corporate-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -115,6 +116,21 @@ export function AppSidebar({ account }: { account: Account | null }) {
           </>
         )}
         <UserProfile account={account} />
+
+        <SidebarSeparator className="my-1" />
+        <div
+          className={cn(
+            "flex items-center gap-1.5 text-muted-foreground opacity-60 transition-opacity hover:opacity-100",
+            isCollapsed ? "justify-center" : "justify-center px-1 py-0.5",
+          )}
+        >
+          <CorporateLogo className="h-3.5 w-auto" />
+          {!isCollapsed && (
+            <span className="font-heading text-[10px] font-medium uppercase tracking-wider">
+              by Corporate
+            </span>
+          )}
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
