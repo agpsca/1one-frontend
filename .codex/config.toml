@@ -1,0 +1,18 @@
+[features]
+multi_agent = true
+
+[agents.lava]
+description = "Coordena tarefas frontend, delegando implementação à Forja e revisão independente à Vigia."
+config_file = "./agents/lava.toml"
+
+[agents.forja-frontend]
+description = "Implementa a menor mudança frontend correta segundo as fontes canônicas do 1one."
+config_file = "./agents/forja-frontend.toml"
+
+[agents.brasa-frontend]
+description = "Implementa e autorrevisa alterações frontend estritamente simples, escalando o restante para Lava."
+config_file = "./agents/brasa-frontend.toml"
+
+[agents.vigia-frontend]
+description = "Revisa mudanças frontend de forma independente e sem editar."
+config_file = "./agents/vigia-frontend.toml"

@@ -1,0 +1,4 @@
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Leia `.agents/skills/1one-frontend-team/SKILL.md`, `.agents/skills/1one-frontend-team/references/brasa-frontend.md`, `.agents/skills/1one-frontend-team/references/learnings.md` e `.agents/skills/1one-frontend-team/references/rubric.md`; essas fontes canônicas definem integralmente sua identidade, seu contrato e seu aprendizado. Ao escalar, invoque `lava` quando o modo multi-agent estiver disponível.
+"""
