@@ -28,6 +28,14 @@ type KiroAgent = {
     }
   >;
   resources?: string[];
+  permissions?: {
+    rules: {
+      capability: string;
+      match?: string[];
+      exclude?: string[];
+      effect: "allow" | "ask" | "deny" | "evaluate";
+    }[];
+  };
 };
 
 const read = (path: string) => readFile(join(root, path), "utf8");
@@ -115,9 +123,32 @@ const [claudeLava, claudeVigia, codexLava, codexVigia, codexConfig] =
     read(".codex/config.toml"),
   ]);
 
-assert.ok(kiroLava.tools.includes("subagent"));
-assert.ok(!kiroLava.tools.includes("fs_write"));
-assert.ok(!kiroLava.tools.includes("execute_bash"));
+// Adaptadores universais: V2 lê toolsSettings; V3 lê tools por tag e permissions.
+// Tags amplas (`subagent`, `@builtin`, `*`) liberariam qualquer subagente no V3.
+for (const agent of [kiroLava, kiroForja, kiroVigia, kiroBrasa]) {
+  for (const broad of ["subagent", "@builtin", "*"]) {
+    assert.ok(
+      !agent.tools.includes(broad),
+      `${agent.name}: tool ampla ${broad}`,
+    );
+  }
+  assert.ok(
+    agent.permissions?.rules.length,
+    `${agent.name}: permissions ausente`,
+  );
+}
+assert.deepEqual(
+  kiroLava.tools.filter((tool) => tool.startsWith("subagent/")),
+  ["subagent/forja-frontend", "subagent/vigia-frontend"],
+);
+assert.deepEqual(
+  kiroBrasa.tools.filter((tool) => tool.startsWith("subagent/")),
+  ["subagent/lava"],
+);
+for (const tool of ["fs_write", "execute_bash", "write", "shell"]) {
+  assert.ok(!kiroLava.tools.includes(tool), `Lava não pode ter ${tool}`);
+}
+assert.ok(!kiroVigia.tools.includes("write"));
 assert.deepEqual(kiroLava.toolsSettings?.subagent?.availableAgents, [
   "forja-frontend",
   "vigia-frontend",
@@ -152,7 +183,7 @@ assert.ok(
   "Brasa não pode escrever saídas do Orval",
 );
 
-const commandIsAllowed = (agent: KiroAgent, command: string) => {
+const v2CommandIsAllowed = (agent: KiroAgent, command: string) => {
   const settings = agent.toolsSettings?.execute_bash;
   const allowed = settings?.allowedCommands?.some((pattern) =>
     new RegExp(pattern).test(command),
@@ -162,6 +193,69 @@ const commandIsAllowed = (agent: KiroAgent, command: string) => {
   );
   return allowed === true && denied !== true;
 };
+
+// V3: glob em que `*` casa qualquer sequência e deny vence allow; sem allow, o
+// headless nega. O runtime separa `; && || |` e avalia cada parte sem as
+// redireções (`git diff > /tmp/x` foi executado como `git diff` no teste de
+// runtime), então o V3 não bloqueia redireção. ponytail: só o sandbox de
+// sistema do Kiro (bwrap) fecha essa lacuna.
+const v3Parts = (command: string) =>
+  command
+    .split(/;|&&|\|\||\|/)
+    .map((part) => part.replace(/\s*\d*[<>]+\s*\S+/g, "").trim())
+    .filter(Boolean);
+const commandIsAllowed = (agent: KiroAgent, command: string) =>
+  v2CommandIsAllowed(agent, command) && v3CommandIsAllowed(agent, command);
+const globMatches = (pattern: string, value: string) =>
+  new RegExp(
+    `^${pattern
+      .split("*")
+      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join(".*")}$`,
+    "s",
+  ).test(value);
+const v3Effects = (agent: KiroAgent, capability: string, value: string) =>
+  (agent.permissions?.rules ?? [])
+    .filter(
+      (rule) =>
+        rule.capability === capability &&
+        (rule.match ?? ["*"]).some((pattern) => globMatches(pattern, value)) &&
+        !(rule.exclude ?? []).some((pattern) => globMatches(pattern, value)),
+    )
+    .map((rule) => rule.effect);
+const v3CommandIsAllowed = (agent: KiroAgent, command: string) =>
+  v3Parts(command).every((part) => {
+    const effects = v3Effects(agent, "shell", part);
+    return !effects.includes("deny") && effects.includes("allow");
+  });
+const v3WriteIsAllowed = (agent: KiroAgent, path: string) => {
+  const effects = v3Effects(agent, "fs_write", path);
+  return !effects.includes("deny") && effects.includes("allow");
+};
+for (const path of [
+  "openapi/openapi.json",
+  "package.json",
+  "README.md",
+  "next.config.ts",
+]) {
+  assert.ok(
+    v3WriteIsAllowed(kiroForja, path),
+    `Forja no Kiro V3 deve escrever ${path}`,
+  );
+}
+assert.ok(!v3WriteIsAllowed(kiroBrasa, "openapi/openapi.json"));
+for (const agent of [kiroLava, kiroVigia]) {
+  assert.ok(
+    !v3WriteIsAllowed(agent, "src/app/page.tsx"),
+    `${agent.name} não pode escrever`,
+  );
+}
+for (const agent of [kiroForja, kiroBrasa]) {
+  assert.ok(
+    !v3WriteIsAllowed(agent, ".env.local"),
+    `${agent.name} não pode escrever .env`,
+  );
+}
 
 for (const agent of [kiroForja, kiroVigia, kiroBrasa]) {
   for (const unsafeCommand of [
@@ -173,6 +267,8 @@ for (const agent of [kiroForja, kiroVigia, kiroBrasa]) {
     "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-example.mts > /tmp/leak",
     "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-example.mts; touch /tmp/leak",
     "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/not-a-check.mts",
+    "pnpm verify && git push",
+    "rm -rf src",
   ]) {
     assert.equal(
       commandIsAllowed(agent, unsafeCommand),
@@ -182,6 +278,30 @@ for (const agent of [kiroForja, kiroVigia, kiroBrasa]) {
   }
 }
 assert.ok(commandIsAllowed(kiroForja, "git diff --cached --check"));
+// Mesmo sem o V2, o V3 sozinho precisa barrar encadeamento, substituição e
+// saídas por flag; redireção fica a cargo do sandbox (ver v3Parts).
+for (const agent of [kiroForja, kiroVigia, kiroBrasa]) {
+  for (const command of [
+    "git diff --output=/tmp/leak",
+    "pnpm exec biome check $(touch /tmp/leak)",
+    "pnpm exec biome check `touch /tmp/leak`",
+    "git status --short --untracked-files=all; touch /tmp/leak",
+    "pnpm verify && git push",
+  ]) {
+    assert.equal(
+      v3CommandIsAllowed(agent, command),
+      false,
+      `${agent.name} no V3 permitiu: ${command}`,
+    );
+  }
+}
+assert.equal(
+  v3CommandIsAllowed(
+    kiroVigia,
+    "pnpm exec biome check --write src/app/page.tsx",
+  ),
+  false,
+);
 assert.ok(
   commandIsAllowed(
     kiroForja,

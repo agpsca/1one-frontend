@@ -54,16 +54,22 @@ Cada CLI descobre agentes em um caminho e formato próprios. Por isso existem ad
 
 | CLI | Adaptador | Formato |
 | --- | --- | --- |
-| Kiro CLI 2.21.3 | `.kiro/agents/` | JSON validado e testado no CLI |
+| Kiro CLI 2.21.3 e harness V3 | `.kiro/agents/` | JSON universal (V2 + V3) |
 | Claude Code | `.claude/agents/` | Markdown com frontmatter Claude |
 | Codex CLI | `.codex/config.toml` e `.codex/agents/` | TOML |
 | Hermes | `.agents/skills/` | Agent Skills do projeto |
 
 Os adaptadores apenas configuram descoberta, ferramentas, sandbox e delegação. Eles apontam para as fontes canônicas e não mantêm cópias das regras ou do aprendizado. A skill da equipe manda cada papel ler somente as skills de domínio aplicáveis; não é necessário duplicá-las em cada adaptador.
 
-Os adaptadores JSON em `.kiro/agents/` foram validados e testados no Kiro CLI
-2.21.3. A compatibilidade de runtime com CLI 3 e IDE ainda não foi exercitada e
-não deve ser presumida. Quando `kiro-cli` está disponível,
+Os adaptadores JSON em `.kiro/agents/` são universais (V2 + V3). O Kiro CLI
+2.21.3 lê `toolsSettings` (regex); o harness V3 lê as tags de `tools` e
+`permissions.rules` (globs, deny vence allow). Os dois foram exercitados em
+runtime. No V3, `allow`/`deny` não enxergam redireção: `git diff > /tmp/x` é
+avaliado como `git diff` e executa. Só o sandbox de sistema do Kiro
+(`/sandbox`, requer `bwrap`) limita essa escrita. Ao editar um adaptador,
+mantenha os dois formatos equivalentes; editar `permissions` à mão deixa o
+agente "Universal · Out of Sync", e o `/upgrade-agent` não deve ser rodado de
+novo sobre eles. Quando `kiro-cli` está disponível,
 `pnpm check:agents` executa a validação nativa dos quatro arquivos e confirma sua
 descoberta; sem o binário, registra o skip e mantém somente a validação estática.
 
@@ -268,7 +274,7 @@ No Kiro, Forja possui escrita explícita em `src/**`, `scripts/**`, `openapi/**`
 
 | CLI | Lava e Vigia | Forja e Brasa | Limite técnico por path |
 |---|---|---|---|
-| Kiro | ferramentas read-only | escrita e shell | parcial, declarado em `toolsSettings` |
+| Kiro | ferramentas read-only | escrita e shell | parcial: `toolsSettings` (V2) e `permissions` (V3) |
 | Claude Code | contrato textual; sem Write/Edit | Edit/Write/Bash | não imposto pelo adaptador |
 | Codex CLI | sandbox `read-only` | sandbox `workspace-write` | não imposto por path |
 | Hermes | contrato da Skill | contrato da Skill | depende do harness |

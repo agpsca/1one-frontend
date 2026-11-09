@@ -2,7 +2,7 @@
   "name": "vigia-frontend",
   "description": "Revisa mudanças frontend do 1one de forma independente e sem editar.",
   "prompt": "file://../../.agents/skills/1one-frontend-team/references/vigia-frontend.md",
-  "tools": ["fs_read", "grep", "glob", "code", "execute_bash"],
+  "tools": ["code", "glob", "grep", "read", "shell"],
   "allowedTools": ["fs_read", "grep", "glob", "code"],
   "toolsSettings": {
     "execute_bash": {
@@ -34,5 +34,82 @@
     "file://../../.agents/skills/1one-frontend-team/SKILL.md",
     "file://../../.agents/skills/1one-frontend-team/references/learnings.md",
     "file://../../.agents/skills/1one-frontend-team/references/rubric.md"
-  ]
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "shell",
+        "match": [
+          "git status --short --untracked-files=all",
+          "git diff",
+          "git diff --cached",
+          "git diff --check",
+          "git diff --cached --check",
+          "pnpm verify",
+          "pnpm check",
+          "pnpm check:ci",
+          "pnpm typecheck",
+          "pnpm check:tokens",
+          "pnpm check:modal",
+          "pnpm check:nav",
+          "pnpm check:proxy",
+          "pnpm check:logo",
+          "pnpm check:login",
+          "pnpm check:logout",
+          "pnpm check:agents",
+          "pnpm exec biome check *",
+          "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-*.mts"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "*;*",
+          "*&*",
+          "*|*",
+          "*>*",
+          "*<*",
+          "*`*",
+          "*$*",
+          "*--output*",
+          "*--write*",
+          "*--fix*",
+          "*--unsafe*"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": ["*"],
+        "exclude": [
+          "git diff",
+          "git diff --cached",
+          "git diff --cached --check",
+          "git diff --check",
+          "git status --short --untracked-files=all",
+          "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-*.mts",
+          "pnpm check",
+          "pnpm check:agents",
+          "pnpm check:ci",
+          "pnpm check:login",
+          "pnpm check:logo",
+          "pnpm check:logout",
+          "pnpm check:modal",
+          "pnpm check:nav",
+          "pnpm check:proxy",
+          "pnpm check:tokens",
+          "pnpm exec biome check",
+          "pnpm exec biome check *",
+          "pnpm typecheck",
+          "pnpm verify"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "fs_read",
+        "effect": "allow"
+      }
+    ]
+  }
 }
