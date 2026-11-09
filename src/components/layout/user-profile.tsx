@@ -1,18 +1,26 @@
 "use client";
 
 import {
-  Building2Icon,
   ChevronDownIcon,
   ChevronUpIcon,
   Loader2Icon,
   LogOutIcon,
-  MailIcon,
   UserPenIcon,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,16 +30,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { type Account, initials } from "@/features/account/account";
 import { cn } from "@/lib/utils";
 import { useModalStore } from "@/stores/modal-store";
@@ -69,36 +77,19 @@ function AccountAvatar({
   );
 }
 
-function AccountDetails({ account }: { account: Account | null }) {
-  return (
-    <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-      {account?.email && (
-        <div className="flex items-center gap-2">
-          <MailIcon className="size-3.5 shrink-0" />
-          <span className="truncate">{account.email}</span>
-        </div>
-      )}
-      {account?.organization && (
-        <div className="flex items-center gap-2">
-          <Building2Icon className="size-3.5 shrink-0" />
-          <span className="truncate">{account.organization}</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function UserProfile({ account }: { account: Account | null }) {
-  const { isMobile } = useSidebar();
+  const { isMobile, state } = useSidebar();
   const openModal = useModalStore((store) => store.open);
 
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const logoutStarted = useRef(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const name = account?.name || "Usuário";
 
   const handleLogout = async () => {
-    setConfirmOpen(false);
+    if (logoutStarted.current) return;
+
+    logoutStarted.current = true;
     setIsLoggingOut(true);
 
     try {
@@ -111,52 +102,56 @@ export function UserProfile({ account }: { account: Account | null }) {
   return (
     <SidebarMenu className="flex-row items-center gap-2 group-data-[collapsible=icon]:flex-col">
       <SidebarMenuItem className="order-2 shrink-0 group-data-[collapsible=icon]:order-0">
-        <Popover open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <PopoverTrigger asChild>
-            <SidebarMenuButton
-              tooltip="Sair"
-              disabled={isLoggingOut}
-              className="size-9! justify-center text-destructive hover:bg-destructive-surface hover:text-destructive group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-8!"
+        <AlertDialog>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AlertDialogTrigger asChild>
+                <SidebarMenuButton
+                  type="button"
+                  aria-label="Sair"
+                  aria-busy={isLoggingOut}
+                  disabled={isLoggingOut}
+                  className="size-9! justify-center text-destructive hover:bg-destructive-surface hover:text-destructive group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-8!"
+                >
+                  {isLoggingOut ? (
+                    <Loader2Icon className="animate-spin" />
+                  ) : (
+                    <LogOutIcon />
+                  )}
+                </SidebarMenuButton>
+              </AlertDialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent
+              side="right"
+              hidden={state !== "collapsed" || isMobile}
             >
-              {isLoggingOut ? (
-                <Loader2Icon className="animate-spin" />
-              ) : (
-                <LogOutIcon />
-              )}
-              <span className="sr-only">Sair</span>
-            </SidebarMenuButton>
-          </PopoverTrigger>
+              Sair
+            </TooltipContent>
+          </Tooltip>
 
-          <PopoverContent align="end" side="right" className="w-72 gap-0 p-0">
-            <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-              <AccountAvatar account={account} className="size-9 bg-muted" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{name}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  Sair desta conta?
-                </p>
-              </div>
-            </div>
-
-            <div className="px-4 py-3">
-              <AccountDetails account={account} />
-            </div>
-
-            <div className="flex justify-end gap-2 border-t border-border px-4 py-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmOpen(false)}
-              >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Sair da conta?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Você voltará para a tela de login.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isLoggingOut}>
                 Cancelar
-              </Button>
-              <Button variant="destructive" size="sm" onClick={handleLogout}>
+              </AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={isLoggingOut}
+                aria-busy={isLoggingOut}
+                onClick={handleLogout}
+              >
                 <LogOutIcon className="size-3.5" />
                 Sair
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SidebarMenuItem>
 
       <SidebarMenuItem className="flex-1">

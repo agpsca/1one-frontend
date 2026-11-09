@@ -1,0 +1,38 @@
+{
+  "name": "vigia-frontend",
+  "description": "Revisa mudanças frontend do 1one de forma independente e sem editar.",
+  "prompt": "file://../../.agents/skills/1one-frontend-team/references/vigia-frontend.md",
+  "tools": ["fs_read", "grep", "glob", "code", "execute_bash"],
+  "allowedTools": ["fs_read", "grep", "glob", "code"],
+  "toolsSettings": {
+    "execute_bash": {
+      "allowedCommands": [
+        "^git status --short --untracked-files=all$",
+        "^git diff$",
+        "^git diff --cached$",
+        "^git diff --check$",
+        "^git diff --cached --check$",
+        "^pnpm (?:verify|check|check:ci|typecheck|check:tokens|check:modal|check:nav|check:proxy|check:logo|check:login|check:logout|check:agents)$",
+        "^pnpm exec biome check(?: --(?:error-on-warnings|no-errors-on-unmatched))*(?: (?:[A-Za-z0-9_./@:+-]+|'[A-Za-z0-9_./()@:+ -]+'))+$",
+        "^node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-[A-Za-z0-9_-]+\\.mts$"
+      ],
+      "deniedCommands": [
+        "--write\\b",
+        "[;&|><`$]",
+        "(?:^|[;&|])\\s*(?:rm|sudo|git push|git commit)\\b"
+      ],
+      "denyByDefault": true,
+      "autoAllowReadonly": true
+    }
+  },
+  "resources": [
+    "file://../../README.md",
+    "file://../../package.json",
+    "file://../../components.json",
+    "file://../../biome.json",
+    "file://../../tsconfig.json",
+    "file://../../.agents/skills/1one-frontend-team/SKILL.md",
+    "file://../../.agents/skills/1one-frontend-team/references/learnings.md",
+    "file://../../.agents/skills/1one-frontend-team/references/rubric.md"
+  ]
+}

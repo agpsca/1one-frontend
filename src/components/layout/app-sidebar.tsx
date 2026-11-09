@@ -120,15 +120,21 @@ export function AppSidebar({ account }: { account: Account | null }) {
         <SidebarSeparator className="my-1" />
         <div
           className={cn(
-            "flex items-center gap-1.5 text-muted-foreground opacity-60 transition-opacity hover:opacity-100",
+            "flex items-center gap-1.5 font-heading text-[10px] font-medium uppercase tracking-wider text-muted-foreground opacity-60 transition-opacity hover:opacity-100",
             isCollapsed ? "justify-center" : "justify-center px-1 py-0.5",
           )}
         >
+          {!isCollapsed && <span>Licensed to</span>}
           <CorporateLogo className="h-3.5 w-auto" />
+          <span className="sr-only">Empresa licenciada</span>
           {!isCollapsed && (
-            <span className="font-heading text-[10px] font-medium uppercase tracking-wider">
-              by Corporate
-            </span>
+            <>
+              <span
+                aria-hidden
+                className="h-3 border-sidebar-border border-l"
+              />
+              <span>Developed with ♥️ by 360multi</span>
+            </>
           )}
         </div>
       </SidebarFooter>

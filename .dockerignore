@@ -24,7 +24,6 @@ Dockerfile
 # Ferramental de desenvolvimento: nada disso e lido por `next build`
 .husky
 .github
-.kiro
 .vscode
 scripts
 biome.json
@@ -33,3 +32,11 @@ orval.config.ts
 openapi
 *.md
 *.log
+
+# Agentes, skills e avaliacoes de IA: so servem ao desenvolvimento.
+# `*.md` acima cobre apenas a raiz; os diretorios precisam sair inteiros.
+.agents
+.claude
+.codex
+.kiro
+semantic-review

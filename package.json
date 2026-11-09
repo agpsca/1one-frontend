@@ -16,7 +16,9 @@
     "check:proxy": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-proxy.mts",
     "check:logo": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-brand-logo.mts",
     "check:login": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-login-transition.mts",
-    "verify": "pnpm check:ci && pnpm typecheck && pnpm check:tokens && pnpm check:modal && pnpm check:nav && pnpm check:proxy && pnpm check:logo && pnpm check:login",
+    "check:logout": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-logout.mts",
+    "check:agents": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-agents.mts",
+    "verify": "pnpm check:ci && pnpm typecheck && pnpm check:tokens && pnpm check:modal && pnpm check:nav && pnpm check:proxy && pnpm check:logo && pnpm check:login && pnpm check:logout && pnpm check:agents",
     "api:pull": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/pull-openapi.mts",
     "api:gen": "orval",
     "api:sync": "pnpm api:pull && pnpm api:gen",
@@ -40,6 +42,9 @@
     ],
     "src/features/auth/login-form.tsx": [
       "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-login-transition.mts"
+    ],
+    "{package.json,scripts/check-logout.mts,src/app/api/auth/logout/route.ts,src/components/layout/user-profile.tsx}": [
+      "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/check-logout.mts"
     ]
   },
   "dependencies": {

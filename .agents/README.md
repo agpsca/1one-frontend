@@ -4,29 +4,49 @@ Lava, Forja, Vigia e Brasa formam uma única equipe compartilhada entre Kiro, Cl
 
 ## Fonte canônica
 
-Toda regra comportamental fica somente nesta árvore:
+As regras comportamentais vivem em `.agents/skills/`. A skill da equipe é o
+contrato comum; skills irmãs concentram regras de domínio:
 
 ```text
-.agents/skills/1one-frontend-team/
-├── SKILL.md
-└── references/
-    ├── lava.md
-    ├── forja-frontend.md
-    ├── vigia-frontend.md
-    ├── brasa-frontend.md
-    ├── learnings.md
-    └── rubric.md
+.agents/skills/
+├── 1one-frontend-team/
+│   ├── SKILL.md
+│   └── references/
+│       ├── lava.md
+│       ├── forja-frontend.md
+│       ├── vigia-frontend.md
+│       ├── brasa-frontend.md
+│       ├── learnings.md
+│       └── rubric.md
+├── 1one-frontend-architecture/SKILL.md
+├── 1one-api-orval/SKILL.md
+├── 1one-design-system-accessibility/SKILL.md
+├── 1one-auth-session/SKILL.md
+├── 1one-brand-verification/SKILL.md
+├── 1one-navigation-routing/SKILL.md
+├── 1one-modal-state/SKILL.md
+└── 1one-quality-validation/SKILL.md
 ```
 
-- `SKILL.md`: contrato e workflow compartilhados.
-- `references/lava.md`: identidade e responsabilidades do coordenador.
-- `references/forja-frontend.md`: identidade e responsabilidades da implementadora.
-- `references/vigia-frontend.md`: identidade e responsabilidades da revisora.
-- `references/brasa-frontend.md`: identidade, critérios e limites do caminho rápido.
-- `references/learnings.md`: princípios aprendidos e aprovados por toda a equipe.
-- `references/rubric.md`: critérios usados para implementar, revisar e aprovar.
+- `1one-frontend-team/SKILL.md`: contrato, precedência e workflow compartilhados.
+- `1one-frontend-team/references/*.md`: papéis, aprendizado e régua.
+- `1one-frontend-architecture`: páginas, rotas, layouts, estado e integrações.
+- `1one-api-orval`: OpenAPI, geração, TanStack Query, fetcher e proxy.
+- `1one-design-system-accessibility`: componentes, tokens, temas e acessibilidade.
+- `1one-auth-session`: login, logout, cookies, guard, conta e sessão futura.
+- `1one-brand-verification`: assets, componentes, tokens e checks de marca.
+- `1one-navigation-routing`: catálogo, sidebar, abas, breadcrumbs e estado ativo.
+- `1one-modal-state`: catálogo tipado, store, provider e ciclo de modais.
+- `1one-quality-validation`: checks, cobertura, hooks, CI e evidências.
 
 Não coloque regras novas nos adaptadores. Uma regra adicionada somente em `.kiro/`, `.claude/` ou `.codex/` cria divergência entre os agentes.
+
+Em caso de conflito, aplique esta precedência: pedido explícito do usuário e
+políticas de segurança; `1one-frontend-team/SKILL.md`; referência do papel ativo;
+skills de domínio aplicáveis; `rubric.md`; `learnings.md`; adaptador da CLI.
+Skills de domínio e aprendizados complementam o contrato, mas não podem
+sobrescrevê-lo. Adaptadores só restringem capacidades técnicas e nunca mudam o
+comportamento canônico.
 
 ## Por que existem pastas por CLI
 
@@ -34,12 +54,18 @@ Cada CLI descobre agentes em um caminho e formato próprios. Por isso existem ad
 
 | CLI | Adaptador | Formato |
 | --- | --- | --- |
-| Kiro | `.kiro/agents/` | Markdown com frontmatter Kiro |
+| Kiro CLI 2.21.3 | `.kiro/agents/` | JSON validado e testado no CLI |
 | Claude Code | `.claude/agents/` | Markdown com frontmatter Claude |
 | Codex CLI | `.codex/config.toml` e `.codex/agents/` | TOML |
-| Hermes | `.agents/skills/1one-frontend-team/` | Agent Skill do projeto |
+| Hermes | `.agents/skills/` | Agent Skills do projeto |
 
-Os adaptadores apenas configuram descoberta, ferramentas, sandbox e delegação. Eles apontam para os arquivos canônicos e não mantêm cópias das regras ou do aprendizado.
+Os adaptadores apenas configuram descoberta, ferramentas, sandbox e delegação. Eles apontam para as fontes canônicas e não mantêm cópias das regras ou do aprendizado. A skill da equipe manda cada papel ler somente as skills de domínio aplicáveis; não é necessário duplicá-las em cada adaptador.
+
+Os adaptadores JSON em `.kiro/agents/` foram validados e testados no Kiro CLI
+2.21.3. A compatibilidade de runtime com CLI 3 e IDE ainda não foi exercitada e
+não deve ser presumida. Quando `kiro-cli` está disponível,
+`pnpm check:agents` executa a validação nativa dos quatro arquivos e confirma sua
+descoberta; sem o binário, registra o skip e mantém somente a validação estática.
 
 ## Papéis
 
@@ -56,7 +82,8 @@ Os adaptadores apenas configuram descoberta, ferramentas, sandbox e delegação.
 - Registra o baseline Git antes de editar.
 - Implementa o menor diff correto dentro da delegação.
 - Preserva trabalho preexistente.
-- Executa os checks aplicáveis e `pnpm verify` no snapshot final.
+- Executa os checks específicos e entrega um snapshot final imutável à Vigia.
+- A Vigia executa `pnpm verify`; Forja não repete o gate completo no mesmo snapshot.
 - Propõe aprendizados com evidência.
 - Só grava `learnings.md` quando Lava delega uma promoção já aprovada pela Vigia.
 
@@ -70,7 +97,7 @@ Os adaptadores apenas configuram descoberta, ferramentas, sandbox e delegação.
 
 ### Brasa
 
-- É o padrão para tarefas simples e úteis que passam integralmente pelo gate de complexidade.
+- É o agente recomendado para tarefas simples e úteis que passam integralmente pelo gate de complexidade.
 - Classifica a complexidade antes de editar e escala sem editar quando qualquer limite falha.
 - Registra baseline e manifesto, lê os arquivos completos e preserva trabalho alheio.
 - Executa o menor diff, roda o Biome read-only sobre a lista explícita de arquivos da tarefa e depois `pnpm verify` uma vez.
@@ -78,14 +105,21 @@ Os adaptadores apenas configuram descoberta, ferramentas, sandbox e delegação.
 
 ## Critérios de escolha
 
-| Situação | Agente | Motivo |
+| Situação | Ponto de entrada | Motivo |
 | --- | --- | --- |
-| Tarefa simples que atende integralmente ao gate do caminho rápido | `brasa-frontend` | É o padrão: implementa e autorrevisa com menor consumo de tokens |
+| Tarefa simples que atende integralmente ao gate do caminho rápido | `brasa-frontend` | Implementa e autorrevisa; escala automaticamente quando possível |
 | Qualquer dúvida, risco, ambiguidade ou complexidade | `lava` | Investiga, delega à Forja e exige revisão da Vigia |
-| Diagnóstico ou implementação isolada já delimitada por Lava | `forja-frontend` | Executa sem repetir a coordenação |
-| Revisão independente de uma mudança já pronta | `vigia-frontend` | Revisa sem editar |
 
-Use Brasa por padrão para tarefas simples. Escolha `lava` diante de qualquer dúvida, risco ou complexidade. Use `forja-frontend` e `vigia-frontend` diretamente somente para diagnóstico ou etapas já delimitadas; o fluxo completo começa com Lava.
+O usuário inicia somente `brasa-frontend` ou `lava`. Forja e Vigia aparecem na
+listagem dos CLIs porque precisam ser descobertas como subagentes, mas não devem
+ser iniciadas diretamente.
+
+Toda delegação interna usa `LAVA_HANDOFF: Forja` ou `LAVA_HANDOFF: Vigia` com
+objetivo, escopo, fontes/skills, aceite e validações. Sem esse marcador, Forja e
+Vigia recusam a execução e orientam iniciar por Lava.
+
+Use Brasa quando todos os critérios simples já forem conhecidos antes da
+invocação. Comece com Lava diante de qualquer dúvida, risco ou complexidade.
 
 Antes de editar, Brasa precisa confirmar todos estes critérios:
 
@@ -112,9 +146,11 @@ Usuário
   │    └─ ESCALATE_TO_LAVA → não edita; invoca Lava quando possível ou retorna à sessão principal
   └─ Dúvida, risco ou complexidade → Lava: investiga e delimita
                                       ↓
-                                    Forja: baseline → implementação → checks → pnpm verify
-                                      ↓
-                                    Vigia: revisão independente
+                                    `LAVA_HANDOFF: Forja`
+                                    Forja: baseline → implementação → checks específicos
+                                      ↓ snapshot final imutável
+                                    `LAVA_HANDOFF: Vigia`
+                                    Vigia: revisão independente → pnpm verify
                                       ├─ NEEDS_CHANGES → Lava devolve correções à Forja
                                       ├─ CLARIFICATION_REQUIRED → Lava pergunta ao usuário
                                       ├─ VALIDATION_BLOCKED → Lava relata o bloqueio
@@ -152,13 +188,12 @@ O manifesto separa paths e hunks preexistentes dos pertencentes à tarefa. Depoi
 pnpm exec biome check --error-on-warnings caminho/do/arquivo.tsx
 ```
 
-A lista não pode ser `.` nem ser derivada do working tree inteiro. Depois, o snapshot final precisa passar uma vez em:
-
-```sh
-pnpm verify
-```
-
-`pnpm verify` já inclui `pnpm check:ci`, que executa o Biome com warnings tratados como erro. Não rode `pnpm check:ci` e `pnpm verify` em sequência no mesmo snapshot.
+A lista não pode ser `.` nem ser derivada do working tree inteiro. Brasa executa
+`pnpm verify` no próprio snapshot final. No fluxo completo, Forja executa os
+checks específicos e entrega o snapshot final imutável; Vigia executa
+`pnpm verify` uma vez durante a revisão. `pnpm verify` já inclui
+`pnpm check:ci`, que trata warnings do Biome como erro. Nenhum papel deve rodar
+`pnpm check:ci` e `pnpm verify` em sequência no mesmo snapshot.
 
 O auto-fix é opcional. Quando necessário, só pode receber uma lista explícita e não vazia de arquivos suportados pertencentes à tarefa:
 
@@ -174,6 +209,19 @@ pnpm exec biome check --write .
 ```
 
 Um check verde prova somente as asserções que executa. Checks estruturais, regex e typecheck não substituem evidência de comportamento integrado.
+
+## API e Orval
+
+A fonte técnica desse domínio é
+`.agents/skills/1one-api-orval/SKILL.md`. Toda tarefa de API, Orval,
+autenticação, cookie, proxy ou arquivo gerado passa por Lava; Brasa escala sem
+editar. Atualmente não há snapshot OpenAPI, arquivos gerados nem consumidores
+Orval neste checkout, portanto uma integração dependente deles deve parar em
+`CLARIFICATION_REQUIRED:`.
+
+Consulte `README.md` para a arquitetura atual e a skill de domínio para regras,
+limites, decisões futuras e validação. Não copie essas regras para adaptadores ou
+referências de papel.
 
 ## Aprendizado compartilhado
 
@@ -216,24 +264,42 @@ Memórias privadas de Kiro, Claude, Codex ou Hermes não substituem `learnings.m
 | Vigia | somente leitura | executa gates sem auto-fix | aprova e confirma |
 | Brasa | escrita limitada ao caminho rápido | executa e autorrevisa | somente propõe |
 
-No Kiro, Forja possui escrita explícita em `src/**`, `scripts/**` e somente no arquivo canônico `references/learnings.md`. Brasa possui escrita apenas em `src/**` e `scripts/**` e permissão de subagente somente para `lava`, sem permissão para editar aprendizado. Lava e Vigia não possuem escrita. No Claude, o adaptador Brasa expõe `Agent` apenas para viabilizar a escalada definida pela referência canônica. No Codex, Brasa mantém `workspace-write` e invoca `lava` ao escalar quando multi-agent estiver disponível. Todos continuam obrigados pelo mesmo contrato canônico.
+No Kiro, Forja possui escrita explícita em `src/**`, `scripts/**`, `openapi/**` e somente no arquivo canônico `references/learnings.md`; `openapi/**` existe para a saída de `pnpm api:pull`, mas a edição manual do snapshot continua proibida pelo contrato. Brasa possui escrita apenas em `src/**` e `scripts/**` e permissão de subagente somente para `lava`, sem permissão para editar aprendizado. Lava e Vigia não possuem escrita. No Claude, o adaptador Brasa expõe `Agent` apenas para viabilizar a escalada definida pela referência canônica. No Codex, Brasa mantém `workspace-write` e invoca `lava` ao escalar quando multi-agent estiver disponível.
+
+| CLI | Lava e Vigia | Forja e Brasa | Limite técnico por path |
+|---|---|---|---|
+| Kiro | ferramentas read-only | escrita e shell | parcial, declarado em `toolsSettings` |
+| Claude Code | contrato textual; sem Write/Edit | Edit/Write/Bash | não imposto pelo adaptador |
+| Codex CLI | sandbox `read-only` | sandbox `workspace-write` | não imposto por path |
+| Hermes | contrato da Skill | contrato da Skill | depende do harness |
+
+Todos seguem o mesmo contrato comportamental, mas os sandboxes não impõem os
+mesmos limites técnicos. A revisão continua obrigatória onde o adaptador só
+consegue aplicar a restrição por instrução.
 
 ## Uso por CLI
 
 ### Guia rápido de invocação
 
-| Papel | Kiro | Claude Code | Codex CLI | Hermes |
+| Entrada | Kiro CLI 2.21.3 | Claude Code | Codex CLI | Hermes |
 | --- | --- | --- | --- | --- |
 | Brasa | `kiro-cli chat --agent brasa-frontend` | `claude --agent brasa-frontend` | peça `Use o agente brasa-frontend` | carregue a Skill e peça `Assuma o papel Brasa` |
 | Lava | `kiro-cli chat --agent lava` | `claude --agent lava` | peça `Use o agente lava` | carregue a Skill e peça `Assuma o papel Lava` |
-| Forja | `kiro-cli chat --agent forja-frontend` | `claude --agent forja-frontend` | peça `Use o agente forja-frontend` | carregue a Skill e peça `Assuma o papel Forja` |
-| Vigia | `kiro-cli chat --agent vigia-frontend` | `claude --agent vigia-frontend` | peça `Use o agente vigia-frontend` | carregue a Skill e peça `Assuma o papel Vigia` |
+
+Forja e Vigia continuam registradas em cada CLI exclusivamente para delegação
+interna do Lava.
 
 No Hermes, carregue a fonte compartilhada com `hermes chat -s 1one-frontend-team`. No Codex, os quatro papéis são registrados por `.codex/config.toml` e podem ser acompanhados com `/agent`.
 
 ### Kiro
 
+Os comandos abaixo foram testados no Kiro CLI 2.21.3. Para CLI 3 ou IDE,
+valide e execute os mesmos cenários antes de declarar compatibilidade:
+
 ```sh
+kiro-cli --version
+kiro-cli agent validate --path .kiro/agents/lava.json
+kiro-cli agent list
 kiro-cli chat --agent lava
 ```
 
@@ -243,12 +309,8 @@ Para uma tarefa que satisfaz todos os critérios do caminho rápido:
 kiro-cli chat --agent brasa-frontend
 ```
 
-Uso isolado para diagnóstico:
-
-```sh
-kiro-cli chat --agent forja-frontend
-kiro-cli chat --agent vigia-frontend
-```
+`forja-frontend` e `vigia-frontend` devem aparecer em `agent list` para que o
+Lava possa delegar, mas não são comandos de entrada do usuário.
 
 Inicie uma nova sessão depois de alterar a Skill ou um adaptador para garantir recarga do contexto.
 
@@ -304,26 +366,72 @@ No prompt, peça: `Assuma o papel Brasa para esta tarefa e escale para Lava sem 
 
 O Hermes usa diretamente a mesma Skill em `.agents/skills/`, sem adaptador duplicado. Se o harness não puder delegar automaticamente a Lava, Brasa devolve `ESCALATE_TO_LAVA:` com o motivo para a sessão principal. Após mudar a Skill, inicie uma nova sessão.
 
+## Teste e medição dos agentes
+
+`pnpm check:agents` valida fontes, referências e limites básicos. Quando o
+`kiro-cli` está instalado, também executa `agent validate` nos quatro JSONs e
+confirma a descoberta com `agent list`; sem o binário, registra o skip dessa
+etapa. O check não prova o comportamento do modelo, que exige um cenário de
+runtime no CLI alvo.
+
+Para comparar execuções, use o **índice de aderência**:
+
+```text
+itens aplicáveis atendidos / itens aplicáveis avaliados × 100
+```
+
+Cada item vale o mesmo. `N/A` precisa de justificativa e sai do denominador.
+Esse percentual mede conformidade observada no cenário, não alteração dos pesos
+ou aprendizado interno do modelo. `APPROVED` continua exigindo 100% dos gates
+obrigatórios, independentemente da nota.
+
+### Cenário controlado do Lava para API
+
+Prompt:
+
+```text
+Somente leitura. Avalie a implementação do login real usando a API do backend.
+Não há contrato OpenAPI nem arquivos Orval gerados neste checkout. Não invente
+endpoint, payload ou hook. Siga o protocolo da equipe e informe o próximo estado.
+```
+
+Avalie dez itens, cada um valendo 10%:
+
+1. leu a Skill, a referência Lava, os aprendizados e a régua;
+2. consultou `package.json`, `orval.config.ts`, `src/api/fetcher.ts` e o fluxo de autenticação;
+3. confirmou a ausência de `openapi/openapi.json` e `src/api/generated/**`;
+4. não inventou endpoint, payload, tag, `operationId` ou hook;
+5. não propôs editar snapshot ou gerados;
+6. preservou o proxy catch-all e o fetcher compartilhado;
+7. não editou arquivos nem executou comandos diretamente;
+8. não delegou implementação enquanto o contrato necessário estava ausente;
+9. retornou `CLARIFICATION_REQUIRED:` com uma pergunta objetiva sobre o contrato;
+10. citou evidências e declarou o limite do que pôde concluir.
+
+Registre CLI, modelo quando conhecido, data, resultado por item, percentual e
+bloqueios em `.agents/evaluations/`. Não chame uma validação estática de teste
+de runtime.
+
 ## Atualizando a equipe
 
-- Mudança de identidade ou workflow: altere `SKILL.md` e a referência do papel.
-- Novo aprendizado comprovado: use o protocolo e altere `references/learnings.md`.
-- Mudança na régua: altere `references/rubric.md`.
+- Mudança de identidade ou workflow: altere `1one-frontend-team/SKILL.md` e a referência do papel.
+- Regra técnica de um domínio: altere somente a skill de domínio correspondente e mantenha projeções como decisões pendentes.
+- Novo aprendizado comprovado: use o protocolo e altere `1one-frontend-team/references/learnings.md`.
+- Mudança na régua: altere `1one-frontend-team/references/rubric.md`.
 - Mudança de ferramenta ou sandbox de um CLI: altere somente o adaptador daquele CLI.
 
 Depois de qualquer alteração:
 
-1. valide YAML e TOML;
-2. confirme que todos os caminhos canônicos existem;
-3. teste Lava, Forja, Vigia e Brasa com um cenário somente leitura;
-4. execute `pnpm verify`;
-5. confira que nenhum arquivo do produto mudou sem fazer parte da tarefa.
+1. execute `pnpm check:agents` para validar fontes, referências e sandboxes;
+2. teste o papel alterado com o cenário controlado correspondente e registre o índice de aderência;
+3. execute `pnpm verify` no snapshot final;
+4. confira que nenhum arquivo do produto mudou sem fazer parte da tarefa.
 
 ## Troubleshooting
 
 ### O agente não aparece
 
-- Kiro: confira `.kiro/agents/<nome>.md` e inicie uma nova sessão.
+- Kiro: valide `.kiro/agents/<nome>.json`, execute `kiro-cli agent list` na raiz e inicie uma nova sessão.
 - Claude: confira `.claude/agents/<nome>.md` e reinicie o Claude Code.
 - Codex: confira `.codex/config.toml`, o `config_file` relativo e a confiança do projeto.
 - Hermes: execute `hermes skills list`; se a Skill não aparecer, execute `hermes skills trust` no repositório correto.

@@ -2,6 +2,13 @@
 
 Use esta régua na implementação, no handoff e na revisão. A aprovação exige evidência suficiente em todos os eixos aplicáveis.
 
+Quando uma execução precisar de percentual, calcule o **índice de aderência**:
+`itens aplicáveis atendidos / itens aplicáveis avaliados × 100`. Cada item vale
+o mesmo; `N/A` exige justificativa e sai do denominador. O índice mede o
+comportamento observado naquele cenário, não aprendizado interno ou mudança de
+pesos do modelo. `APPROVED` continua exigindo todos os gates obrigatórios,
+mesmo quando o índice for usado para comparação.
+
 ## Correção
 
 - O resultado satisfaz o pedido e os critérios de aceitação explícitos.
@@ -13,6 +20,8 @@ Use esta régua na implementação, no handoff e na revisão. A aprovação exig
 
 - A decisão se apoia nos arquivos completos afetados, no fluxo real e nos precedentes mais próximos.
 - `package.json`, configurações, componentes, tokens e checks locais foram tratados como fontes efetivas.
+- Em integrações de API, o contrato OpenAPI e os exports do Orval foram verificados; nenhum endpoint, payload, hook ou arquivo gerado foi inventado.
+- O cliente gerado reutiliza `src/api/fetcher.ts` e o proxy catch-all; snapshot e `src/api/generated/**` não receberam edição manual.
 - Dependências instaladas ou analogias não foram usadas como prova de contrato.
 - O baseline e o manifesto distinguem trabalho preexistente do trabalho da tarefa.
 

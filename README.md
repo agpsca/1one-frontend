@@ -34,6 +34,11 @@ então o husky não se instala e o repositório fica sem pre-commit e sem pre-pu
 silenciosamente. O `dev-setup.sh` faz isso e falha alto se os hooks não ficarem
 ativos.
 
+Em dev, abra o app por `localhost` ou `127.0.0.1`. Para outros hosts, como um
+IP de rede, o Next bloqueia `/_next/*` e a página carrega sem hidratar: links
+funcionam, controles com React não. Liberar um host exige incluí-lo
+deliberadamente em `allowedDevOrigins`, no `next.config.ts`.
+
 ### Variáveis de ambiente
 
 Template em `.env.example`.
@@ -52,22 +57,31 @@ pnpm build            # build de produção (output standalone)
 pnpm start            # serve o build
 
 pnpm check            # Biome: formato + lint (somente leitura)
-pnpm check:fix         # Biome com --write
+pnpm check:fix        # Biome com --write; uso manual
+pnpm check:ci         # Biome read-only com warnings tratados como erro
 pnpm typecheck        # next typegen && tsc --noEmit
 
 pnpm check:tokens     # globals.css e lib/tokens.ts em sincronia
 pnpm check:modal      # invariantes da store de modais
 pnpm check:nav        # rota ativa, auto-abertura e trilha
 pnpm check:proxy      # montagem de URL, headers e escolha de token do proxy
+pnpm check:logo       # assets, paths, viewBox e cores da marca
+pnpm check:login      # invariantes da transição login → /home
+pnpm check:logout     # 20 invariantes estruturais do logout local
+pnpm check:agents     # fontes, adaptadores e sandboxes básicos dos agentes
+pnpm verify           # check:ci + typecheck + checks de domínio e agentes
 
 pnpm api:pull         # baixa o OpenAPI do backend para openapi/openapi.json
-pnpm api:gen          # Orval: gera cliente + schemas zod
-pnpm api:sync         # os dois acima em sequência
+pnpm api:gen          # Orval: gera cliente + schemas zod do snapshot local
+pnpm api:sync         # api:pull e api:gen em sequência
 ```
 
-Os quatro `check:*` são arquivos únicos com `node:assert`, sem framework e sem
-fixture. Rodam em segundos e cobrem a lógica que erra calado: token que o proxy
-manda pro backend, item de navegação aceso, hex que saiu de sincronia com o CSS.
+Os sete checks de domínio são scripts com `node:assert`, sem framework ou
+fixtures. Eles cobrem invariantes específicas de tokens, modais, navegação,
+proxy, marca, transição de login e logout local. Cada check prova apenas as
+asserções que executa; `pnpm verify` é o gate local completo. O `check:logout`
+prova 20 invariantes estruturais, mas não monta React ou Radix nem testa o
+comportamento em browser.
 
 ## Organização
 
@@ -93,9 +107,22 @@ src/
 Convenção: `app/**/page.tsx` fica fino — metadata e re-export. O conteúdo mora
 em `features/<feature>/pages/`.
 
+## Estado da Home
+
+A Home atual em `src/features/home/pages/home-page.tsx` é um template de
+composição. KPIs, módulos, pedidos, clientes, tarefas, textos, ícones, cores e
+arranjo são dados demonstrativos, não requisitos nem design final. Seus botões e
+checkboxes não definem ações, permissões, persistência, rotas ou contratos de
+API.
+
+Uma futura Home deve partir de objetivo, usuários, dados, estados, ações,
+destinos, permissões, responsividade e critérios de aceitação explícitos. O
+template pode demonstrar primitivas existentes, mas não deve preencher lacunas
+de produto por analogia.
+
 ## Decisões que não são óbvias no código
 
-### Rede: o browser nunca vê o backend
+### Rede: o browser usa apenas a mesma origem
 
 O cliente HTTP não é escrito à mão. `pnpm api:pull` baixa o schema que o backend
 publica em `OPENAPI_URL` para `openapi/openapi.json`, e `pnpm api:gen` roda o
@@ -106,10 +133,25 @@ o mutator por onde toda chamada gerada passa — os hooks gerados assumem que el
 devolve só o corpo parseado, e é isso que o `includeHttpResponseReturnType:
 false` do config garante.
 
-Nenhuma opção de `override.query` está ligada. `staleTime` e afins moram no
-`defaultOptions` do `QueryClient`, em `components/providers.tsx`: um lugar, em
-vez de repetido dentro de cada hook gerado. O `ReactQueryDevtools` vive no mesmo
-provider, atrás de `NODE_ENV !== "production"`.
+Nenhuma opção de `override.query` está ligada e o `QueryClient` global em
+`components/providers.tsx` é criado sem `defaultOptions`; portanto, hoje valem
+os padrões do TanStack Query. Se o produto definir `staleTime`, retry ou outra
+política global, configure-a nesse provider em vez de repeti-la nos hooks
+gerados. O `ReactQueryDevtools` vive no mesmo provider, atrás de
+`NODE_ENV !== "production"`.
+
+`openapi/openapi.json` é um snapshot baixado do backend. O Orval limpa e recria
+`src/api/generated/endpoints`, `generated/models` e `generated/zod` porque os
+três destinos usam `clean: true`. Não edite o snapshot nem os arquivos gerados:
+altere o contrato no backend, execute `pnpm api:sync` e só então importe os
+exports realmente emitidos. Não invente endpoint, `operationId`, payload, tag ou
+nome de hook. A política de versionamento do snapshot e dos gerados ainda está
+pendente e precisa ser decidida antes de incluí-los em uma mudança.
+
+O proxy catch-all em `app/api/[...path]` atende as operações geradas. Não crie
+um route handler Next por endpoint do backend. Uma rota manual só se justifica
+quando existe comportamento de infraestrutura que o catch-all não cobre, como o
+logout que precisa apagar o cookie mesmo após uma resposta bem-sucedida.
 
 O token de acesso mora num cookie httpOnly, que o JavaScript não lê. Então toda
 chamada faz dois saltos:
@@ -125,14 +167,22 @@ significa que ele só funciona em código que roda no browser. Quando a primeira
 chamada em server component aparecer, ela precisa de um mutator próprio com base
 absoluta e cookie lido via `next/headers`, não de um remendo no fetcher.
 
+Há uma lacuna conhecida: a resposta 503 atual do proxy inclui `BACKEND_URL` e o
+detalhe da exceção no JSON devolvido ao browser. A topologia fica fora do bundle,
+mas ainda pode vazar nesse erro até o proxy sanitizar a resposta.
+
 `app/api/auth/logout` é a única rota por endpoint, e existe porque o proxy só
-apaga o cookie em 401 — sair precisa apagá-lo no sucesso.
+apaga o cookie em 401 — sair precisa apagá-lo no sucesso. Essa fronteira
+server-side é um precedente válido; o caminho upstream `auth/logout` continua
+provisório até ser confirmado pelo contrato OpenAPI.
 
 ### Tokens de design em três camadas
 
 `src/app/globals.css` declara *primitives* (valores crus) e *semantics* (um
-token por intenção, apontando para um primitive). Componentes consomem apenas os
-semânticos: trocar a marca é trocar o primitive, não o componente.
+token por intenção, apontando para um primitive). Componentes de produto consomem tokens semânticos. Primitives aparecem apenas
+em exceções comprovadas de marca ou decoração, como logos e gradientes, com a
+função visual preservada. Fora dessas exceções, trocar a marca é trocar o
+primitive, não o componente.
 
 `src/lib/tokens.ts` é um espelho em dados dos mesmos valores, usado só para
 renderizar a documentação. `pnpm check:tokens` quebra o commit se os dois
@@ -193,9 +243,13 @@ cabeçalho da sidebar, que não existe no bundle de produção.
 
 | Momento | O que roda |
 |---|---|
-| pre-commit | `lint-staged`: Biome nos arquivos staged, mais o `check:*` correspondente quando o arquivo que ele guarda muda (`globals.css`/`tokens.ts`, `modal-store.ts`, `http/upstream.ts`, `nav.ts`) |
-| pre-push | `pnpm typecheck` |
+| pre-commit | `lint-staged`: Biome nos arquivos staged e checks mapeados para tokens, modal, proxy, navegação, transição de login e logout local |
+| pre-push | `pnpm verify` |
 | CI (PR e push em `dev`/`main`) | `check`, `typecheck`, `check:tokens`, `check:modal` |
+
+O pre-push é mais amplo que a CI atual. A CI ainda não executa `check:nav`,
+`check:proxy`, `check:logo`, `check:login`, `check:logout` nem `check:agents`, e
+usa `check` em vez de `check:ci`.
 
 ## Docker
 
@@ -214,11 +268,14 @@ docker run -p 3000:3000 -e BACKEND_URL=http://host:8000 1one-frontend
 - **Não há autenticação.** O login aceita qualquer credencial e `/home` é
   alcançável digitando a URL. Falta sessão, middleware de guard e trocar o
   placeholder de `features/account/account.ts` pela chamada de `/users/me`.
-- **Faltam ícones e OG image.** Mascote e ícone já estão em `public/`, mas falta
-  o SVG do símbolo, o favicon definitivo, os app icons e a OG image.
+- **Faltam assets finais de aplicação.** O símbolo já existe em
+  `public/Brand/icon.svg`, e há imagens de logo e mascote, mas ainda faltam a
+  aprovação de uso, o favicon definitivo, app icons e OG image.
 - **O Dockerfile passa `NEXT_PUBLIC_API_URL` como build-arg**, variável que
   deixou de existir quando o proxy entrou, e não documenta `BACKEND_URL`.
-- **A CI não roda `check:nav` nem `check:proxy`.**
+- **A CI não executa o gate completo.** Faltam `check:nav`, `check:proxy`,
+  `check:logo`, `check:login`, `check:logout` e `check:agents`, e ela usa
+  `check` em vez de `check:ci`.
 - **Nada do Orval foi gerado ainda** — não há `openapi/openapi.json` nem
   `src/api/generated/`, e o `.gitignore` não cobre nenhum dos dois. Falta
   decidir se artefato gerado entra no repositório.

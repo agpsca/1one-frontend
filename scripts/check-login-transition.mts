@@ -17,6 +17,13 @@ const [form, home] = await Promise.all(
   ),
 );
 
+const [background, grainient] = await Promise.all(
+  [
+    "../src/components/ui/login-background.tsx",
+    "../src/components/grainient.tsx",
+  ].map((p) => readFile(new URL(p, import.meta.url), "utf8")),
+);
+
 // 1. o pending vem da navegação de verdade, via useTransition
 assert.match(
   form,
@@ -88,4 +95,98 @@ assert.match(
   "/home sem `instant = false` navega sem pendência e a cortina nunca aparece",
 );
 
-console.log("ok — cortina login → /home: 8 invariantes");
+// 9. sem o handler hidratado, o HTML não pode cair no GET implícito e colocar
+//    as credenciais nomeadas na query string. Um submitter também não pode
+//    sobrescrever o POST do form com formMethod="get".
+const loginForm = form.match(/<form[\s\S]*?<\/form>/)?.[0];
+assert.ok(loginForm, "formulário de login não encontrado");
+
+const openingFormTag = loginForm.match(/<form[\s\S]*?>\s*<FieldGroup>/)?.[0];
+assert.ok(
+  openingFormTag,
+  "tag de abertura do formulário de login não encontrada",
+);
+assert.match(
+  openingFormTag,
+  /\bmethod="post"/,
+  "o formulário precisa declarar POST para impedir o fallback GET sem hidratação",
+);
+assert.doesNotMatch(
+  loginForm,
+  /\bformMethod\s*=\s*(?:["']get["']|\{\s*["']get["']\s*\})/i,
+  "um controle de submit não pode sobrescrever o formulário com GET",
+);
+
+// 10. este check é textual: prova a estrutura do acesso temporário, não o
+//     comportamento em runtime de um browser. `Button asChild` preserva o DOM
+//     como âncora e deixa o foco visível por conta da primitiva existente.
+assert.match(
+  form,
+  /import Link from "next\/link"/,
+  "o acesso temporário precisa usar o Link do Next",
+);
+const temporaryAccess = loginForm.match(
+  /<Button asChild variant="link">[\s\S]*?<\/Button>/,
+)?.[0];
+assert.ok(
+  temporaryAccess,
+  "acesso temporário precisa usar a variante link com asChild",
+);
+assert.match(
+  temporaryAccess,
+  /<Link href="\/home">\s*Continuar sem autenticação\s*<\/Link>/,
+  "o texto do acesso temporário precisa pertencer ao link nativo para /home",
+);
+assert.doesNotMatch(
+  temporaryAccess,
+  /<button\b|\bonClick\b|\brouter\.push\b|\btype\s*=\s*["']submit["']|\bformAction\b/,
+  "o acesso temporário não pode depender de JS nem agir como submit",
+);
+
+// 11. este check é estrutural: prova somente que o markup-fonte do componente
+//     contém o fallback com o ramp existente antes da montagem condicional do
+//     canvas e que o canvas foi configurado com alpha. Não prova pixels,
+//     disponibilidade WebGL nem renderização em browser.
+const ramp = background.match(/const RAMP = \[([\s\S]*?)\] as const;/)?.[1];
+assert.ok(ramp, "ramp do fundo de login não encontrado");
+for (const token of [
+  "--color-neutral-black",
+  "--color-brand-dark-green",
+  "--color-brand-green",
+  "--color-brand-spring-green",
+  "--color-neutral-white",
+]) {
+  assert.ok(ramp.includes(`"${token}"`), `ramp do login sem ${token}`);
+}
+assert.match(
+  background,
+  /const ANGLE = 55;/,
+  "ângulo do fundo precisa continuar em 55°",
+);
+assert.match(
+  background,
+  /const FALLBACK_BACKGROUND = `linear-gradient\(\$\{ANGLE\}deg,/,
+  "fallback precisa ser um gradiente CSS no mesmo ângulo do shader",
+);
+assert.match(
+  background,
+  /RAMP\.map\(\(token\) => `var\(\$\{token\}\)`\)\.join\(", "\)/,
+  "fallback precisa consumir todos os tokens do ramp existente",
+);
+assert.doesNotMatch(
+  background,
+  /if \(!colors\) return null/,
+  "o componente não pode devolver HTML vazio antes de resolver o ramp",
+);
+assert.match(
+  background,
+  /style=\{\{ backgroundImage: FALLBACK_BACKGROUND \}\}[\s\S]*?\{colors && \([\s\S]*?<Grainient/,
+  "fallback precisa estar no markup incondicional, sob o canvas condicional",
+);
+assert.match(
+  grainient,
+  /getContext\("webgl2", \{\s*alpha: true,/,
+  "o canvas precisa preservar transparência enquanto o WebGL não desenha",
+);
+
+console.log("ok — login: 11 invariantes");

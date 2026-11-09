@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeIcon, EyeOffIcon, KeyRoundIcon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
@@ -61,6 +62,7 @@ export function LoginForm() {
 
   return (
     <form
+      method="post"
       className="flex flex-col gap-6"
       onSubmit={form.handleSubmit(() => {
         startNavigation(() => {
@@ -156,6 +158,9 @@ export function LoginForm() {
         <Field>
           <Button type="submit" disabled={busy}>
             {busy ? "Entrando..." : "Entrar"}
+          </Button>
+          <Button asChild variant="link">
+            <Link href="/home">Continuar sem autenticação</Link>
           </Button>
         </Field>
       </FieldGroup>

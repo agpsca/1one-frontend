@@ -1,0 +1,23 @@
+{
+  "name": "lava",
+  "description": "Coordena tarefas frontend do 1one, delegando implementação à Forja e revisão independente à Vigia.",
+  "prompt": "file://../../.agents/skills/1one-frontend-team/references/lava.md",
+  "tools": ["fs_read", "grep", "glob", "code", "subagent"],
+  "allowedTools": ["fs_read", "grep", "glob", "code"],
+  "toolsSettings": {
+    "subagent": {
+      "availableAgents": ["forja-frontend", "vigia-frontend"],
+      "trustedAgents": ["forja-frontend", "vigia-frontend"]
+    }
+  },
+  "resources": [
+    "file://../../README.md",
+    "file://../../package.json",
+    "file://../../components.json",
+    "file://../../biome.json",
+    "file://../../tsconfig.json",
+    "file://../../.agents/skills/1one-frontend-team/SKILL.md",
+    "file://../../.agents/skills/1one-frontend-team/references/learnings.md",
+    "file://../../.agents/skills/1one-frontend-team/references/rubric.md"
+  ]
+}
