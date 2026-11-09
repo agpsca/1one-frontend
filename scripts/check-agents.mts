@@ -197,8 +197,8 @@ const v2CommandIsAllowed = (agent: KiroAgent, command: string) => {
 // V3: glob em que `*` casa qualquer sequência e deny vence allow; sem allow, o
 // headless nega. O runtime separa `; && || |` e avalia cada parte sem as
 // redireções (`git diff > /tmp/x` foi executado como `git diff` no teste de
-// runtime), então o V3 não bloqueia redireção. ponytail: só o sandbox de
-// sistema do Kiro (bwrap) fecha essa lacuna.
+// runtime), então o V3 não bloqueia redireção. ponytail: hooks e o sandbox do
+// Kiro 3.1.0 não fecham essa lacuna (ver .agents/README.md); a Vigia revisa.
 const v3Parts = (command: string) =>
   command
     .split(/;|&&|\|\||\|/)

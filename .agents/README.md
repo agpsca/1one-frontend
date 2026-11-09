@@ -65,8 +65,12 @@ Os adaptadores JSON em `.kiro/agents/` são universais (V2 + V3). O Kiro CLI
 2.21.3 lê `toolsSettings` (regex); o harness V3 lê as tags de `tools` e
 `permissions.rules` (globs, deny vence allow). Os dois foram exercitados em
 runtime. No V3, `allow`/`deny` não enxergam redireção: `git diff > /tmp/x` é
-avaliado como `git diff` e executa. Só o sandbox de sistema do Kiro
-(`/sandbox`, requer `bwrap`) limita essa escrita. Ao editar um adaptador,
+avaliado como `git diff` e executa, gravando em qualquer lugar do repositório
+ou do `/tmp`. Medidas testadas no Kiro CLI 3.1.0 que não fecham essa lacuna:
+hooks `PreToolUse` no perfil ou em `.kiro/hooks/` (o V3 não os executa) e o
+sandbox de sistema (`/sandbox`), que só protege fora do workspace e não aplica
+as regras `fs_write` dos agentes. Até o Kiro tratar redireção, a contenção é a
+revisão da Vigia, que vê arquivos novos no `git status`. Ao editar um adaptador,
 mantenha os dois formatos equivalentes; editar `permissions` à mão deixa o
 agente "Universal · Out of Sync", e o `/upgrade-agent` não deve ser rodado de
 novo sobre eles. Quando `kiro-cli` está disponível,
