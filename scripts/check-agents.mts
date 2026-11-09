@@ -349,7 +349,19 @@ for (const role of roles) {
   );
 }
 
-const kiroVersion = spawnSync("kiro-cli", ["--version"], { encoding: "utf8" });
+// O kiro-cli desiste após ~5s se outra sessão do Kiro segura o data.sqlite3;
+// isso não é erro de configuração, então tenta de novo antes de falhar.
+function kiro(args: string[]) {
+  for (let attempt = 1; ; attempt++) {
+    const result = spawnSync("kiro-cli", args, { encoding: "utf8" });
+    if (attempt === 5 || !/database is locked/.test(result.stderr ?? "")) {
+      return result;
+    }
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000);
+  }
+}
+
+const kiroVersion = kiro(["--version"]);
 if (
   (kiroVersion.error as NodeJS.ErrnoException | undefined)?.code === "ENOENT"
 ) {
@@ -357,16 +369,15 @@ if (
 } else {
   assert.equal(kiroVersion.status, 0, kiroVersion.stderr);
   for (const role of roles) {
-    const validation = spawnSync(
-      "kiro-cli",
-      ["agent", "validate", "--path", `.kiro/agents/${role}.json`],
-      { encoding: "utf8" },
-    );
+    const validation = kiro([
+      "agent",
+      "validate",
+      "--path",
+      `.kiro/agents/${role}.json`,
+    ]);
     assert.equal(validation.status, 0, validation.stderr || validation.stdout);
   }
-  const discovery = spawnSync("kiro-cli", ["agent", "list"], {
-    encoding: "utf8",
-  });
+  const discovery = kiro(["agent", "list"]);
   assert.equal(discovery.status, 0, discovery.stderr);
   const discoveryOutput = `${discovery.stdout}\n${discovery.stderr}`;
   for (const role of roles) {
