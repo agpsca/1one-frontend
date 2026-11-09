@@ -409,7 +409,8 @@ Avalie dez itens, cada um valendo 10%:
 10. citou evidências e declarou o limite do que pôde concluir.
 
 Registre CLI, modelo quando conhecido, data, resultado por item, percentual e
-bloqueios em `.agents/evaluations/`. Não chame uma validação estática de teste
+bloqueios em `.agents/evaluations/` (pasta local, ignorada pelo git; não
+versione esses registros). Não chame uma validação estática de teste
 de runtime.
 
 ## Atualizando a equipe

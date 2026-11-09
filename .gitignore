@@ -32,6 +32,10 @@ yarn-error.log*
 .env*
 !.env.example
 
+# local agent evaluation logs and backups
+/.agents/evaluations/
+*.bak
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
